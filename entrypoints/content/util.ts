@@ -82,3 +82,23 @@ function getVectorFrom(origin: number[], segment: number[][]) {
     : segment[0];
   return getVector(origin, other);
 }
+
+// get xpath by content
+export function getElByContent(content: string) {
+  const result = document.evaluate(
+    `//*[normalize-space(text())='${content.toLocaleLowerCase()}']`,
+    document,
+    null,
+    XPathResult.FIRST_ORDERED_NODE_TYPE,
+    null
+  )
+  return result.singleNodeValue
+}
+
+export function scrollAndBlink(target: HTMLElement) {
+  target?.scrollIntoView({ behavior: 'smooth' })
+  target?.classList.add('alerts-border')
+  setTimeout(() => {
+    target?.classList.remove('alerts-border')
+  }, 3000)
+}

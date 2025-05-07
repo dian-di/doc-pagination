@@ -1,7 +1,6 @@
-import { toast } from '@/lib/toast'
-
+import { ToastType, toast } from '@/lib/toast'
 import type { Pattern } from '@/types/local.d'
-import { getEle } from '@/lib'
+import { scrollAndBlink } from './util'
 
 const keyCodeMap = {
   left: ['ArrowLeft', 'KeyA'],
@@ -27,20 +26,21 @@ export default class Navigate {
 
   init() {
     this.enabled = true
-    this.prevEle = getEleBySelectorList(this.pattern.prev_selector) as HTMLElement
-    this.nextEle = getEleBySelectorList(this.pattern.next_selector) as HTMLElement
+    this.prevEle = this.pattern.prevEle
+    this.nextEle = this.pattern.nextEle
     document.addEventListener('keydown', this.keyPad.bind(this), false)
   }
 
   check() {
     if (!this.enabled) return
     if (this.prevEle && this.nextEle) {
-      this.prevEle.classList.add('ring-2', 'ring-blue-500')
-      this.nextEle.classList.add('ring-2', 'ring-blue-500')
+      scrollAndBlink(this.prevEle)
+      scrollAndBlink(this.nextEle)
     } else {
       this.unInstall()
       toast({
-        text: 'No element found, please check the selector',
+        text: 'No element found',
+        type: ToastType.Warning
       })
     }
   }
@@ -66,15 +66,6 @@ export default class Navigate {
       this.nextEle?.click()
     }
   }
-}
-
-function getEleBySelectorList(list: string[]) {
-  let elRes: Element | null | undefined = null
-  for (const selector of list) {
-    elRes = getEle(selector)
-    if (elRes) break
-  }
-  return elRes
 }
 
 const INPUT_TAG = ['INPUT', 'TEXTAREA']

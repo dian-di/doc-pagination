@@ -1,7 +1,10 @@
-export type Pattern = {
-  domain: string
-  next_selector: string[]
-  prev_selector: string[]
-  updated_at: string | null
-  test_url: string
-}
+// export type Pattern = {
+//   prevEle: HTMLElement
+//   nextEle: HTMLElement
+// }
+
+export type Pattern = (
+  | { prevEle: HTMLElement; nextEle: null }
+  | { prevEle: null; nextEle: HTMLElement }
+  | { prevEle: HTMLElement; nextEle: HTMLElement }
+)
