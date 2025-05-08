@@ -100,3 +100,26 @@ export function scrollAndBlink(target: HTMLElement) {
     target?.classList.remove('alerts-border')
   }, 3000)
 }
+
+/**
+ *
+ * @param elementList
+ *  最多返回2个元素，如果没找到，返回最后一个元素
+ */
+export function peerElements(elementList: HTMLElement[]) {
+  if (!elementList?.length) return []
+
+  const result: HTMLElement[] = []
+  let preEle = elementList[0]
+
+  for (let i = 1; i < elementList.length; i++) {
+    const element = elementList[i]
+    if (element.offsetTop && preEle.offsetTop && element.offsetTop === preEle.offsetTop) {
+      result.push(preEle, element)
+      if (result.length === 2) break
+    }
+    preEle = element
+  }
+
+  return result.length ? result : [elementList[elementList.length - 1]]
+}

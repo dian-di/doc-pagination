@@ -4,7 +4,7 @@ import { $$, getEle } from '@/lib'
 import type { Pattern } from '@/types/local'
 import { selectors } from './const'
 import Navigate from './navigate'
-import { getElByContent, isDirectionArrowPath } from './util'
+import { getElByContent, isDirectionArrowPath, peerElements } from './util'
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -14,10 +14,12 @@ export default defineContentScript({
      * 2. previews, next
      * 3. svg
      */
-    const pattern = executeFunctionsUntilSuccess(functions)
-    if (pattern) {
-      new Navigate(pattern, true)
-    }
+    setTimeout(() => {
+      const pattern = executeFunctionsUntilSuccess(functions)
+      if (pattern) {
+        new Navigate(pattern, true)
+      }
+    }, 2000)
   },
 })
 
@@ -37,6 +39,7 @@ function getPatternBySelector(): Pattern | null {
     const prev = getEle(select[0])
     const next = getEle(select[1])
     if (prev || next) {
+      console.log(prev, next, 'prev next')
       return {
         prevEle: prev as HTMLElement,
         nextEle: next as HTMLElement,
@@ -55,6 +58,7 @@ function getPatternByXPath() {
   const next = executeFunctionsUntilSuccess(
     nextContentList.map((item) => () => getElByContent(item)),
   )
+  console.log(prev, next, 'prev next')
   if (prev || next) {
     return {
       prevEle: prev?.closest('a') as HTMLElement,
@@ -64,25 +68,20 @@ function getPatternByXPath() {
 }
 
 function getPatternBySVG() {
-  const svgList = $$('a svg')
+  const svgList = $$('a svg').reverse()
   const targetList = []
   for (const svg of svgList) {
-    const path = svg.firstElementChild?.getAttribute('d')
+    const path = svg.querySelector('path')?.getAttribute('d')
     if (path && isDirectionArrowPath(path)) {
-      targetList.push(svg.closest('a'))
+      svg.closest('a') && targetList.push(svg.closest('a'))
     }
-    if (targetList.length > 1) break
   }
   if (!targetList.length) return null
-  if (length === 2) {
-    return {
-      prevEle: targetList[0],
-      nextEle: targetList[1],
-    }
-  }
-  // TODO: 根据开口方向判断是上一页还是下一页，需要opencv.js
+  // TODO: a元素相邻，且距文档顶部的距离一样，则为分页元素
+  const finalList = peerElements(targetList)
+  if (!finalList.length) return null
   return {
-    prevEle: targetList[0],
-    nextEle: targetList[0],
+    prevEle: finalList[1] || finalList[1],
+    nextEle: finalList[0],
   }
 }
