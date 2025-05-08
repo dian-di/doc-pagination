@@ -40,7 +40,7 @@ export default class Navigate {
       this.unInstall()
       toast({
         text: 'No element found',
-        type: ToastType.Warning
+        type: ToastType.Warning,
       })
     }
   }

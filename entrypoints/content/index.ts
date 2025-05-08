@@ -1,10 +1,10 @@
 // import hotkeys from 'hotkeys-js'
-import './index.scss'
-import { $$, getEle } from '@/lib';
-import type { Pattern } from '@/types/local';
+import './style.css'
+import { $$, getEle } from '@/lib'
+import type { Pattern } from '@/types/local'
 import { selectors } from './const'
-import Navigate from './navigate';
-import { getElByContent, isDirectionArrowPath } from './util';
+import Navigate from './navigate'
+import { getElByContent, isDirectionArrowPath } from './util'
 
 export default defineContentScript({
   matches: ['<all_urls>'],
@@ -16,30 +16,24 @@ export default defineContentScript({
      */
     const pattern = executeFunctionsUntilSuccess(functions)
     if (pattern) {
-      new Navigate(pattern)
+      new Navigate(pattern, true)
     }
   },
 })
 
 function executeFunctionsUntilSuccess(functions: (() => any)[]) {
   for (const func of functions) {
-      const result = func()
-      if (result) return result
+    const result = func()
+    if (result) return result
   }
-  return undefined; // 或者返回一个默认值
+  return undefined // 或者返回一个默认值
 }
 
 // 使用示例
-const functions = [
-  getPatternBySelector,
-  getPatternByXPath,
-  getPatternBySVG
-]
-
-
+const functions = [getPatternBySelector, getPatternByXPath, getPatternBySVG]
 
 function getPatternBySelector(): Pattern | null {
-  for (const select in selectors) {
+  for (const select of selectors) {
     const prev = getEle(select[0])
     const next = getEle(select[1])
     if (prev || next) {
@@ -56,15 +50,15 @@ function getPatternByXPath() {
   const prevContentList = ['prev', 'previous', '上一页']
   const nextContentList = ['next', '下一页']
   const prev = executeFunctionsUntilSuccess(
-    prevContentList.map(() => () => getElByContent)
+    prevContentList.map((item) => () => getElByContent(item)),
   )
   const next = executeFunctionsUntilSuccess(
-    nextContentList.map(() => () => getElByContent)
+    nextContentList.map((item) => () => getElByContent(item)),
   )
   if (prev || next) {
     return {
-      prevEle: prev as HTMLElement,
-      nextEle: next as HTMLElement,
+      prevEle: prev?.closest('a') as HTMLElement,
+      nextEle: next?.closest('a') as HTMLElement,
     }
   }
 }
@@ -92,5 +86,3 @@ function getPatternBySVG() {
     nextEle: targetList[0],
   }
 }
-
-
