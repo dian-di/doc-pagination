@@ -1,10 +1,11 @@
-// export type Pattern = {
-//   prevEle: HTMLElement
-//   nextEle: HTMLElement
-// }
+// export type Pattern = (
+//   | { prevEle: HTMLElement; nextEle: null }
+//   | { prevEle: null; nextEle: HTMLElement }
+//   | { prevEle: HTMLElement; nextEle: HTMLElement }
+// )
 
 export type Pattern = (
-  | { prevEle: HTMLElement; nextEle: null }
-  | { prevEle: null; nextEle: HTMLElement }
-  | { prevEle: HTMLElement; nextEle: HTMLElement }
+  | { prev: string; next: null }
+  | { prev: null; next: string }
+  | { prev: string; next: string }
 )

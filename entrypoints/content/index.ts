@@ -4,21 +4,13 @@ import { $$, getEle } from '@/lib'
 import type { Pattern } from '@/types/local'
 import { selectors } from './const'
 import Navigate from './navigate'
-import { getElByContent, isDirectionArrowPath, peerElements } from './util'
+import { getElByContent, getXpath, isDirectionArrowPath, peerElements } from './util'
 
 export default defineContentScript({
   matches: ['<all_urls>'],
   async main() {
-    /**
-     * 1. class
-     * 2. previews, next
-     * 3. svg
-     */
     setTimeout(() => {
-      const pattern = executeFunctionsUntilSuccess(functions)
-      if (pattern) {
-        new Navigate(pattern, true)
-      }
+      new Navigate(() => executeFunctionsUntilSuccess(functions), true)
     }, 2000)
   },
 })
@@ -34,6 +26,7 @@ function executeFunctionsUntilSuccess(functions: (() => any)[]) {
 // 使用示例
 const functions = [getPatternBySelector, getPatternByXPath, getPatternBySVG]
 
+// 通过常用class名
 function getPatternBySelector(): Pattern | null {
   for (const select of selectors) {
     const prev = getEle(select[0])
@@ -41,14 +34,15 @@ function getPatternBySelector(): Pattern | null {
     if (prev || next) {
       console.log(prev, next, 'prev next')
       return {
-        prevEle: prev as HTMLElement,
-        nextEle: next as HTMLElement,
+        prev: getXpath(prev as HTMLElement),
+        next: getXpath(next as HTMLElement),
       }
     }
   }
   return null
 }
 
+// 通过常用xpath是否包含'next','previous'等关键字
 function getPatternByXPath() {
   const prevContentList = ['prev', 'previous', '上一页']
   const nextContentList = ['next', '下一页']
@@ -61,13 +55,15 @@ function getPatternByXPath() {
   console.log(prev, next, 'prev next')
   if (prev || next) {
     return {
-      prevEle: prev?.closest('a') as HTMLElement,
-      nextEle: next?.closest('a') as HTMLElement,
+      prev: getXpath(prev?.closest('a') as HTMLElement),
+      next: getXpath(next?.closest('a') as HTMLElement),
     }
   }
 }
 
+// 通过svg是否为箭头
 function getPatternBySVG() {
+  // 从网页底部往上找
   const svgList = $$('a svg').reverse()
   const targetList = []
   for (const svg of svgList) {
@@ -77,11 +73,12 @@ function getPatternBySVG() {
     }
   }
   if (!targetList.length) return null
-  // TODO: a元素相邻，且距文档顶部的距离一样，则为分页元素
+  // a元素相邻，且距文档顶部的距离一样，则为分页元素
   const finalList = peerElements(targetList)
+  console.log(finalList, 'finalList')
   if (!finalList.length) return null
   return {
-    prevEle: finalList[1] || finalList[1],
-    nextEle: finalList[0],
+    prev: getXpath(finalList[1] || finalList[0]),
+    next: getXpath(finalList[0]),
   }
 }

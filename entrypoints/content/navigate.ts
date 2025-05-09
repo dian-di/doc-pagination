@@ -1,6 +1,6 @@
 import { ToastType, toast } from '@/lib/toast'
 import type { Pattern } from '@/types/local.d'
-import { scrollAndBlink } from './util'
+import { getElByXpath, scrollAndBlink } from './util'
 
 const keyCodeMap = {
   left: ['ArrowLeft', 'KeyA'],
@@ -13,11 +13,13 @@ const keyCodeMap = {
  */
 export default class Navigate {
   pattern: Pattern = {} as Pattern
+  patternGetter: () => Pattern
+  canNav = false
   enabled = false
-  prevEle: HTMLElement | null = null
-  nextEle: HTMLElement | null = null
-  constructor(pattern: Pattern, auto_enable?: boolean) {
-    this.pattern = pattern
+  constructor(patternGetter: () => Pattern, auto_enable?: boolean) {
+    this.pattern = patternGetter()
+    this.patternGetter = patternGetter
+    this.canNav = !!(this.getNextEl() || this.getPrevEl())
     if (auto_enable) {
       this.enabled = true
       this.init()
@@ -26,16 +28,24 @@ export default class Navigate {
 
   init() {
     this.enabled = true
-    this.prevEle = this.pattern.prevEle
-    this.nextEle = this.pattern.nextEle
     document.addEventListener('keydown', this.keyPad.bind(this), false)
+  }
+
+  updatePattern() {
+    this.pattern = this.patternGetter()
   }
 
   check() {
     if (!this.enabled) return
-    if (this.prevEle && this.nextEle) {
-      scrollAndBlink(this.prevEle)
-      scrollAndBlink(this.nextEle)
+    if (this.pattern.prev && this.pattern.next) {
+      const prevEl = this.getPrevEl()
+      const nextEl = this.getNextEl()
+      if (prevEl) {
+        scrollAndBlink(prevEl)
+      }
+      if (nextEl) {
+        scrollAndBlink(nextEl)
+      }
     } else {
       this.unInstall()
       toast({
@@ -61,10 +71,28 @@ export default class Navigate {
     const code = e.code
     if (!this.enabled || !this.pattern || userEditing()) return
     if (keyCodeMap.left.includes(code)) {
-      this.prevEle?.click()
+      this.getPrevEl()?.click()
     } else if (keyCodeMap.right.includes(code)) {
-      this.nextEle?.click()
+      this.getNextEl()?.click()
     }
+  }
+  getPrevEl() {
+    if (!this.pattern.prev) return null
+    const el = getElByXpath(this.pattern.prev)
+    // 说明dom有变更，xpath也随之变化
+    // test url: https://docs.swmansion.com/react-native-reanimated/docs
+    if (this.canNav && !el) {
+      this.updatePattern()
+    }
+    return getElByXpath(this.pattern.prev) as HTMLElement
+  }
+  getNextEl() {
+    if (!this.pattern.next) return null
+    const el = getElByXpath(this.pattern.next)
+    if (this.canNav && !el) {
+      this.updatePattern()
+    }
+    return getElByXpath(this.pattern.next) as HTMLElement
   }
 }
 
