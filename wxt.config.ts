@@ -25,5 +25,8 @@ export default defineConfig({
         applyFixes: true,
       }),
     ],
+    esbuild: {
+      drop: ['console', 'debugger'],
+    },
   }),
 })

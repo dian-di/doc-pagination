@@ -132,7 +132,7 @@ export function peerElements(elementList: HTMLElement[]) {
     preEle = element
   }
 
-  return result.length ? result : [elementList[elementList.length - 1]]
+  return result.length ? result : []
 }
 
 export function getXpath(el: HTMLElement) {
